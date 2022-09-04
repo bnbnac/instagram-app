@@ -5,17 +5,27 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import { Appearance, Text, View } from "react-native";
 import LoggedOutNav from "./navigators/LoggedOutNav";
-import { ThemeProvider } from "@react-navigation/native";
+import { ApolloProvider, useReactiveVar } from "@apollo/client";
+import client, { isLoggedInVar, tokenVar } from "./apollo";
+import LoggedInNav from "./navigators/LoggedInNav";
+import { NavigationContainer } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
   const [appIsReady, setAppIsReady] = useState(false);
   useEffect(() => {
     async function prepare() {
       try {
         await Font.loadAsync(Ionicons.font);
         await Asset.loadAsync(require("./assets/logo.png"));
+        const token = await AsyncStorage.getItem("token");
+        if (token) {
+          isLoggedInVar(true);
+          tokenVar(token);
+        }
       } catch (e) {
         console.warn(e);
       } finally {
@@ -23,7 +33,7 @@ export default function App() {
       }
     }
     prepare();
-  }, []);
+  }, [isLoggedIn]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -40,7 +50,11 @@ export default function App() {
       <View onLayout={onLayoutRootView}>
         <Text>Hi</Text>
       </View>
-      <LoggedOutNav />
+      <ApolloProvider client={client}>
+        <NavigationContainer>
+          {isLoggedIn ? <LoggedInNav /> : <LoggedOutNav />}
+        </NavigationContainer>
+      </ApolloProvider>
     </>
   );
 }
