@@ -19,6 +19,8 @@ export type StackNavFactoryParamList = {
   Me: undefined;
   Profile: undefined;
   Photo: undefined;
+  Comments: undefined;
+  Likes: undefined;
 };
 
 export default function StackNavFactory({ screenName }: any) {

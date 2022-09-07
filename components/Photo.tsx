@@ -6,6 +6,16 @@ import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavFactoryParamList } from "../navigators/StackNavFactory";
+import { gql, useMutation } from "@apollo/client";
+
+const TOGGLE_LIKE_MUTATION = gql`
+  mutation toggleLike($id: Int!) {
+    toggleLike(id: $id) {
+      ok
+      error
+    }
+  }
+`;
 
 const Container = styled.View``;
 const Header = styled.TouchableOpacity`
@@ -56,7 +66,7 @@ export default function Photo({
   likes,
 }: any) {
   const { width, height } = useWindowDimensions();
-  const navigation: StackNavigationProp<StackNavFactoryParamList, "Feed"> =
+  const navigation: StackNavigationProp<StackNavFactoryParamList> =
     useNavigation();
   const [imageHeight, setImageHeight] = useState(height - 450);
   useEffect(() => {
@@ -64,9 +74,48 @@ export default function Photo({
       setImageHeight(height / 3);
     });
   }, [file]);
+
+  const updateToggleLike = (cache: any, result: any) => {
+    const {
+      data: {
+        toggleLike: { ok },
+      },
+    } = result;
+    if (ok) {
+      const photoId = `Photo:${id}`;
+      cache.modify({
+        id: photoId,
+        fields: {
+          isLiked(prev: boolean) {
+            return !prev;
+          },
+          likes(prev: number) {
+            if (isLiked) {
+              return prev - 1;
+            }
+            return prev + 1;
+          },
+        },
+      });
+    }
+  };
+  const [toggleLikeMutation] = useMutation(TOGGLE_LIKE_MUTATION, {
+    variables: {
+      id,
+    },
+    update: updateToggleLike,
+  });
+
   return (
     <Container>
-      <Header onPress={() => navigation.navigate("Profile")}>
+      <Header
+        onPress={() =>
+          navigation.navigate("Profile", {
+            username: user.username,
+            id: user.id,
+          })
+        }
+      >
         <UserAvatar resizeMode="cover" source={{ uri: user.avatar }} />
         <Username>{user.username}</Username>
       </Header>
@@ -80,7 +129,7 @@ export default function Photo({
       />
       <ExtraContainer>
         <Actions>
-          <Action>
+          <Action onPress={toggleLikeMutation}>
             <Ionicons
               name={isLiked ? "heart" : "heart-outline"}
               color={isLiked ? "tomato" : "white"}
@@ -91,11 +140,20 @@ export default function Photo({
             <Ionicons name="chatbubble-outline" color="white" size={22} />
           </Action>
         </Actions>
-        <TouchableOpacity onPress={() => navigation.navigate("Likes")}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Likes", { photoId: id })}
+        >
           <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
         </TouchableOpacity>
         <Caption>
-          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("Profile", {
+                username: user.username,
+                id: user.id,
+              })
+            }
+          >
             <Username>{user.username}</Username>
           </TouchableOpacity>
           <CaptionText>{caption}</CaptionText>

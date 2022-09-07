@@ -12,6 +12,7 @@ const FEED_QUERY = gql`
     seeFeed(page: $page) {
       ...PhotoFragment
       user {
+        id
         username
         avatar
       }
@@ -34,7 +35,7 @@ export default function Feed({ navigation }: any) {
   const { data, refetch, loading, fetchMore } = useQuery(FEED_QUERY, {
     variables: { page },
   });
-  const refresh = async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
@@ -52,7 +53,7 @@ export default function Feed({ navigation }: any) {
           setPage(page + 1);
         }}
         refreshing={refreshing}
-        onRefresh={refresh}
+        onRefresh={onRefresh}
         style={{ width: "100%" }}
         showsVerticalScrollIndicator={false}
         data={data?.seeFeed}
