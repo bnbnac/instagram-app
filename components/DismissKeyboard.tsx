@@ -1,14 +1,14 @@
 import React from "react";
 import { Keyboard, Platform, TouchableWithoutFeedback } from "react-native";
 
-export default function DissmissKeyboard({ children }: any) {
-  const dissmissKeyboard = () => {
+export default function DismissKeyboard({ children }: any) {
+  const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
   return (
     <TouchableWithoutFeedback
       style={{ flex: 1 }}
-      onPress={dissmissKeyboard}
+      onPress={dismissKeyboard}
       disabled={Platform.OS === "web"}
     >
       {children}

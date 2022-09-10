@@ -10,8 +10,6 @@ import Search from "../screens/Search";
 import Likes from "../screens/Likes";
 import Comments from "../screens/Comments";
 
-const Stack = createStackNavigator();
-
 export type StackNavFactoryParamList = {
   Feed: undefined;
   Search: undefined;
@@ -22,6 +20,7 @@ export type StackNavFactoryParamList = {
   Comments: undefined;
   Likes: undefined;
 };
+const Stack = createStackNavigator<StackNavFactoryParamList>();
 
 export default function StackNavFactory({ screenName }: any) {
   return (

@@ -63,9 +63,7 @@ export default function App() {
 
   return (
     <>
-      <View onLayout={onLayoutRootView}>
-        <Text>Hi</Text>
-      </View>
+      <View onLayout={onLayoutRootView}></View>
       <ApolloProvider client={client}>
         <NavigationContainer>
           {isLoggedIn ? <LoggedInNav /> : <LoggedOutNav />}

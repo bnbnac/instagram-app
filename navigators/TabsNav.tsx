@@ -1,10 +1,5 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import Feed from "../screens/Feed";
-import Search from "../screens/Search";
-import Notifications from "../screens/Notifications";
-import Profile from "../screens/Profile";
 import { Image, View } from "react-native";
 import TabIcon from "../components/nav/TabIcon";
 import StackNavFactory from "./StackNavFactory";
