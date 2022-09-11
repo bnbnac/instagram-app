@@ -1,5 +1,11 @@
-import { gql, useMutation, useQuery, useSubscription } from "@apollo/client";
-import React, { useEffect } from "react";
+import {
+  gql,
+  useApolloClient,
+  useMutation,
+  useQuery,
+  useSubscription,
+} from "@apollo/client";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   FlatList,
@@ -74,7 +80,6 @@ const ROOM_QUERY = gql`
     }
   }
 `;
-
 const SEND_MESSAGE_MUTATION = gql`
   mutation sendMessage($payload: String!, $roomId: Int, $userId: Int) {
     sendMessage(payload: $payload, roomId: $roomId, userId: $userId) {
@@ -83,7 +88,6 @@ const SEND_MESSAGE_MUTATION = gql`
     }
   }
 `;
-
 const ROOM_UPDATES = gql`
   subscription roomUpdates($id: Int!) {
     roomUpdates(id: $id) {
@@ -152,17 +156,58 @@ export default function Room({ route, navigation }: any) {
   );
   const { data, loading, subscribeToMore } = useQuery(ROOM_QUERY, {
     variables: {
-      id: route.params.id,
+      id: route?.params?.id,
     },
   });
+  const client = useApolloClient();
+  const updateQuery = (previousQuery: any, options: any) => {
+    console.log(previousQuery, "++++++++++++++++++++++", options);
+    const {
+      subscriptionData: {
+        data: { roomUpdates: message },
+      },
+    } = options;
+
+    if (message.id) {
+      const messageFragment = client.cache.writeFragment({
+        fragment: gql`
+          fragment NewMessage on Message {
+            id
+            payload
+            user {
+              username
+              avatar
+            }
+            read
+          }
+        `,
+        data: message,
+      });
+      client.cache.modify({
+        id: `Room:${route.params.id}`,
+        fields: {
+          messages(prev) {
+            return [...prev, messageFragment];
+          },
+        },
+      });
+    }
+  };
+
+  const [subscribed, setSubscribed] = useState(false);
   useEffect(() => {
+    console.log(data?.seeRoom);
     if (data?.seeRoom) {
       subscribeToMore({
         document: ROOM_UPDATES,
-        variables: { id: route?.params?.id },
+        variables: {
+          id: route?.params?.id,
+        },
+        updateQuery,
       });
+      setSubscribed(true);
     }
-  }, [data]);
+  }, [data, subscribed]);
   const onValid = ({ message }: any) => {
     if (!sending) {
       sendMessageMutation({
