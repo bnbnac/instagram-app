@@ -161,12 +161,12 @@ export default function Room({ route, navigation }: any) {
   });
   const client = useApolloClient();
   const updateQuery = (previousQuery: any, options: any) => {
-    console.log(previousQuery, "++++++++++++++++++++++", options);
     const {
       subscriptionData: {
         data: { roomUpdates: message },
       },
     } = options;
+    console.log(message.payload);
 
     if (message.id) {
       const messageFragment = client.cache.writeFragment({
@@ -187,6 +187,12 @@ export default function Room({ route, navigation }: any) {
         id: `Room:${route.params.id}`,
         fields: {
           messages(prev) {
+            const existingMessage = prev.find(
+              (aMessage: any) => aMessage.__ref === messageFragment?.__ref
+            );
+            if (existingMessage) {
+              return prev;
+            }
             return [...prev, messageFragment];
           },
         },
@@ -196,14 +202,24 @@ export default function Room({ route, navigation }: any) {
 
   const [subscribed, setSubscribed] = useState(false);
   useEffect(() => {
-    console.log(data?.seeRoom);
-    if (data?.seeRoom) {
+    if (data?.seeRoom && !subscribed) {
       subscribeToMore({
         document: ROOM_UPDATES,
         variables: {
           id: route?.params?.id,
         },
-        updateQuery,
+        updateQuery: updateQuery as any,
+        // onError: (error) => {
+        //   console.log("try subscribe again. ERROR");
+        //   console.log(error);
+        //   subscribeToMore({
+        //     document: ROOM_UPDATES,
+        //     variables: {
+        //       id: route?.params?.id,
+        //     },
+        //     updateQuery: updateQuery as any,
+        //   });
+        // },
       });
       setSubscribed(true);
     }
@@ -269,7 +285,7 @@ export default function Room({ route, navigation }: any) {
             <Ionicons
               name="send"
               color={
-                !Boolean(watch("message")) ? "rgba(255,255,255,0.5" : "white"
+                !Boolean(watch("message")) ? "rgba(255,255,255,0.5)" : "white"
               }
               size={22}
             />
