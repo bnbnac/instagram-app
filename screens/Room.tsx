@@ -118,6 +118,7 @@ export default function Room({ route, navigation }: any) {
         id,
         payload: message,
         user: {
+          __typename: "User",
           username: myData.me.username,
           avatar: myData.me.avatar,
         },
@@ -142,6 +143,12 @@ export default function Room({ route, navigation }: any) {
         id: `Room:${route.params.id}`,
         fields: {
           messages(prev: any) {
+            const existingMessage = prev.find(
+              (aMessage: any) => aMessage.__ref === messageFragment?.__ref
+            );
+            if (existingMessage) {
+              return prev;
+            }
             return [...prev, messageFragment];
           },
         },
@@ -166,7 +173,6 @@ export default function Room({ route, navigation }: any) {
         data: { roomUpdates: message },
       },
     } = options;
-    console.log(message.payload);
 
     if (message.id) {
       const messageFragment = client.cache.writeFragment({
@@ -183,6 +189,7 @@ export default function Room({ route, navigation }: any) {
         `,
         data: message,
       });
+
       client.cache.modify({
         id: `Room:${route.params.id}`,
         fields: {
@@ -210,7 +217,6 @@ export default function Room({ route, navigation }: any) {
         },
         updateQuery: updateQuery as any,
         // onError: (error) => {
-        //   console.log("try subscribe again. ERROR");
         //   console.log(error);
         //   subscribeToMore({
         //     document: ROOM_UPDATES,
